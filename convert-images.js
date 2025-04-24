@@ -1,9 +1,7 @@
-// convert-images.js
 const fs = require('fs');
-const path = require('path');
 const sharp = require('sharp');
-const globby = require('globby').globby;
-
+const path = require('path');
+const { globby } = require('globby');
 
 const IMG_DIR = 'static/img';
 const MD_DIR = 'docs';
@@ -12,6 +10,8 @@ async function convertImages() {
   const imagePaths = await globby(`${IMG_DIR}/**/*.{png,jpg,jpeg}`);
   const markdownPaths = await globby(`${MD_DIR}/**/*.{md,mdx}`);
 
+  const convertedWebps = new Set();
+
   for (const imgPath of imagePaths) {
     const webpPath = imgPath.replace(/\.(png|jpe?g)$/i, '.webp');
 
@@ -19,20 +19,22 @@ async function convertImages() {
       await sharp(imgPath)
         .webp({ quality: 80 })
         .toFile(webpPath);
-      console.log(`✅ Converted: ${imgPath} → ${webpPath}`);
-
-      // Delete original
+      convertedWebps.add(path.basename(webpPath)); // store just the filename
       fs.unlinkSync(imgPath);
-      console.log(`🗑 Deleted original: ${imgPath}`);
+      console.log(`✅ Converted: ${imgPath} → ${webpPath}`);
     } catch (err) {
       console.error(`❌ Failed to convert ${imgPath}`, err);
     }
   }
 
-  // Rewrite markdown references
   for (const mdPath of markdownPaths) {
     let content = fs.readFileSync(mdPath, 'utf8');
-    const updated = content.replace(/\.(png|jpg|jpeg)/g, '.webp');
+    let updated = content;
+
+    updated = updated.replace(/\/img\/([\w-]+)\.(png|jpg|jpeg)/g, (match, name) => {
+      const webpFile = `${name}.webp`;
+      return convertedWebps.has(webpFile) ? `/img/${webpFile}` : match;
+    });
 
     if (content !== updated) {
       fs.writeFileSync(mdPath, updated);
@@ -40,7 +42,7 @@ async function convertImages() {
     }
   }
 
-  console.log('✅ All image conversions and markdown updates complete!');
+  console.log('✅ Done: Images converted, markdown updated (safely).');
 }
 
 convertImages();
