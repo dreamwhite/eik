@@ -1,0 +1,8 @@
+{
+  "label": "Personal",
+  "position": 1,
+  "link": {
+    "type": "generated-index",
+    "description": "Reflections, tools, and stories from my journey into coding and beyond."
+  }
+}
