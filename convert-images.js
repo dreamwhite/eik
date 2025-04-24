@@ -10,7 +10,7 @@ const MD_DIR = 'docs';
 
 async function convertImages() {
   const imagePaths = await globby(`${IMG_DIR}/**/*.{png,jpg,jpeg}`);
-  const markdownPaths = await globby(`${MD_DIR}/**/*.md`);
+  const markdownPaths = await globby(`${MD_DIR}/**/*.{md,mdx}`);
 
   for (const imgPath of imagePaths) {
     const webpPath = imgPath.replace(/\.(png|jpe?g)$/i, '.webp');
